@@ -1,0 +1,6 @@
+{
+  "name": "Handler Monitoring Dashboard",
+  "description": "Handler repair monitoring and spare parts inventory dashboard with real-time tracking, stock adjustments, and SharePoint Excel integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
