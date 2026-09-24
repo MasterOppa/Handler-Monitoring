@@ -26,7 +26,9 @@ import {
   Upload,
   ExternalLink,
   Minimize2,
-  Maximize2
+  Maximize2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 const ADMIN_USER = 'admin';
@@ -457,6 +459,52 @@ export default function App() {
   const handleMouseUp = () => {
     isDraggingRef.current = false;
   };
+
+  // Table horizontal scrollbar state & listeners
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [canScrollHorizontally, setCanScrollHorizontally] = useState(false);
+
+  const updateScrollProgress = () => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll > 2) {
+      setCanScrollHorizontally(true);
+      setScrollProgress(Math.min(100, Math.max(0, (el.scrollLeft / maxScroll) * 100)));
+    } else {
+      setCanScrollHorizontally(false);
+      setScrollProgress(0);
+    }
+  };
+
+  const handleScrollByAmount = (px: number) => {
+    if (tableWrapRef.current) {
+      tableWrapRef.current.scrollBy({ left: px, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const track = e.currentTarget;
+    const rect = track.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    if (tableWrapRef.current) {
+      const maxScroll = tableWrapRef.current.scrollWidth - tableWrapRef.current.clientWidth;
+      tableWrapRef.current.scrollTo({ left: ratio * maxScroll, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    updateScrollProgress();
+    el.addEventListener('scroll', updateScrollProgress, { passive: true });
+    window.addEventListener('resize', updateScrollProgress);
+    return () => {
+      el.removeEventListener('scroll', updateScrollProgress);
+      window.removeEventListener('resize', updateScrollProgress);
+    };
+  }, [activeTab, repairData, spareData, density, sidebarCollapsed]);
 
   // Filtered repair rows
   const filteredRepairData = useMemo(() => {
@@ -1434,7 +1482,7 @@ export default function App() {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            className="flex-1 m-4 mt-3 rounded-2xl overflow-auto select-none cursor-grab active:cursor-grabbing backdrop-blur-2xl"
+            className="flex-1 m-4 mt-3 mb-2 rounded-2xl overflow-auto select-none cursor-grab active:cursor-grabbing backdrop-blur-2xl custom-table-scrollbar"
             style={{
               background: 'var(--glass-card)',
               boxShadow: 'var(--glass-shadow)'
@@ -1623,7 +1671,7 @@ export default function App() {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            className="flex-1 m-4 mt-3 rounded-2xl overflow-auto select-none cursor-grab active:cursor-grabbing backdrop-blur-2xl"
+            className="flex-1 m-4 mt-3 mb-2 rounded-2xl overflow-auto select-none cursor-grab active:cursor-grabbing backdrop-blur-2xl custom-table-scrollbar"
             style={{
               background: 'var(--glass-card)',
               boxShadow: 'var(--glass-shadow)'
@@ -1806,6 +1854,62 @@ export default function App() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Bottom Horizontal Scroll Bar Navigation Bar */}
+        {canScrollHorizontally && (
+          <div
+            className="mx-4 mb-2 px-3 py-1.5 rounded-xl flex items-center gap-3 backdrop-blur-xl transition-all"
+            style={{
+              background: 'var(--glass-card)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: 'var(--card-shadow)'
+            }}
+          >
+            <button
+              type="button"
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0"
+              style={{ background: 'var(--control-bg)', color: 'var(--text-main)' }}
+              onClick={() => handleScrollByAmount(-350)}
+              title="Scroll table left"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Interactive Track */}
+            <div
+              className="flex-1 relative h-3 rounded-full cursor-pointer overflow-hidden p-0.5"
+              style={{ background: 'var(--control-bg)' }}
+              onClick={handleScrollBarClick}
+              title="Click or drag to jump across columns"
+            >
+              <div
+                className="h-full rounded-full transition-all duration-75 relative"
+                style={{
+                  width: `${Math.max(8, scrollProgress)}%`,
+                  background: 'linear-gradient(90deg, #f97316 0%, #ec4899 100%)',
+                  boxShadow: '0 0 10px rgba(236, 72, 153, 0.5)'
+                }}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0"
+              style={{ background: 'var(--control-bg)', color: 'var(--text-main)' }}
+              onClick={() => handleScrollByAmount(350)}
+              title="Scroll table right"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            <span
+              className="text-[11px] font-semibold font-mono tracking-tight shrink-0 select-none opacity-80"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {Math.round(scrollProgress)}%
+            </span>
           </div>
         )}
 
