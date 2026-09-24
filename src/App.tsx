@@ -315,7 +315,6 @@ export default function App() {
   const [stockModalPart, setStockModalPart] = useState<SparePart | null>(null);
   const [stockModalAction, setStockModalAction] = useState<'add' | 'withdraw'>('add');
   const [stockModalQty, setStockModalQty] = useState(1);
-  const [stockModalReason, setStockModalReason] = useState('');
 
   // Lightbox
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -846,7 +845,6 @@ export default function App() {
     setStockModalPart(part);
     setStockModalAction(action);
     setStockModalQty(1);
-    setStockModalReason('');
     setShowStockModal(true);
   };
 
@@ -872,9 +870,7 @@ export default function App() {
     );
 
     showToast(
-      `${stockModalAction === 'add' ? 'Added' : 'Withdrew'} ${stockModalQty} unit(s) of ${stockModalPart.code}${
-        stockModalReason ? ` (${stockModalReason})` : ''
-      }`
+      `${stockModalAction === 'add' ? 'Added' : 'Withdrew'} ${stockModalQty} unit(s) of ${stockModalPart.code}`
     );
     setShowStockModal(false);
   };
@@ -1516,15 +1512,32 @@ export default function App() {
                   >
                     #
                   </th>
-                  {COLUMNS.map((col) => (
-                    <th
-                      key={col.key}
-                      className="sticky top-0 z-10 text-left p-3 font-bold text-[11px] uppercase tracking-wider whitespace-nowrap"
-                      style={{ background: 'var(--glass-th)', color: 'var(--text-muted)' }}
-                    >
-                      {col.label}
-                    </th>
-                  ))}
+                  {COLUMNS.map((col) => {
+                    const isMultiLine = col.key === 'DETAILS' || col.key === 'Handler Major Part';
+                    return (
+                      <th
+                        key={col.key}
+                        className={`sticky top-0 z-10 text-left p-3 font-bold text-[11px] uppercase tracking-wider ${
+                          isMultiLine ? 'whitespace-normal min-w-[140px] leading-tight' : 'whitespace-nowrap'
+                        }`}
+                        style={{ background: 'var(--glass-th)', color: 'var(--text-muted)' }}
+                      >
+                        {col.key === 'DETAILS' ? (
+                          <div className="flex flex-col">
+                            <span>DETAILS</span>
+                            <span className="text-[9.5px] opacity-75 font-medium normal-case">(Image as Evidence)</span>
+                          </div>
+                        ) : col.key === 'Handler Major Part' ? (
+                          <div className="flex flex-col">
+                            <span>Handler</span>
+                            <span>Major Part</span>
+                          </div>
+                        ) : (
+                          col.label
+                        )}
+                      </th>
+                    );
+                  })}
                   {isLoggedIn && (
                     <th
                       className="sticky top-0 z-10 text-center p-3 font-bold text-[11px] uppercase tracking-wider w-36"
@@ -2360,20 +2373,6 @@ export default function App() {
                   value={stockModalQty}
                   onChange={(e) => setStockModalQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
                   className="w-full px-4 py-2.5 rounded-xl text-center text-lg font-extrabold outline-none"
-                  style={{ background: 'var(--control-bg)', color: 'var(--text-main)' }}
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                  Reason / Note (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={stockModalReason}
-                  onChange={(e) => setStockModalReason(e.target.value)}
-                  placeholder="e.g. PM Maintenance MT99"
-                  className="w-full px-3.5 py-2 rounded-xl text-xs outline-none"
                   style={{ background: 'var(--control-bg)', color: 'var(--text-main)' }}
                 />
               </div>
